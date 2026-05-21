@@ -1,0 +1,6 @@
+{
+    "workbench.browser.openLocalhostLinks": false,
+    "python.analysis.extraPaths": [
+        "./backend/app/services"
+    ]
+}

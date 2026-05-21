@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+groq
+httpx
+sqlalchemy
+bcrypt
+python-jose[cryptography]
+pydantic[email]
+ 
