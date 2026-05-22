@@ -3,7 +3,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 from app.services.auth_service import get_current_user
-from app.services.ai_service import generate_followup_question, check_emergency
+from app.services.ai_service import generate_followup_question
+from app.medical.emergency_detector import check_emergency
 
 router = APIRouter()
 
