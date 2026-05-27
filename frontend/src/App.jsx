@@ -1,76 +1,172 @@
-import { Routes, Route } from "react-router-dom";
+import {
 
-import Home from "./pages/Home";
+  BrowserRouter,
+
+  Routes,
+
+  Route,
+
+  Navigate,
+
+} from "react-router-dom";
+
 import Login from "./pages/Login";
+
 import Signup from "./pages/Signup";
+
 import Dashboard from "./pages/Dashboard";
-import MedicineReminder from "./pages/MedicineReminder";
-import History from "./pages/History";
+
 import ChatPage from "./pages/ChatPage";
 
-import ProtectedRoute from "./components/ProtectedRoute";
+import History from "./pages/History";
+
+import Analytics from "./pages/Analytics";
+
+import MedicineReminder from "./pages/MedicineReminder";
+
+import ProtectedRoute from "./components/layout/ProtectedRoute";
+
+import {
+
+  AuthProvider
+
+} from "./context/AuthContext";
+
 
 export default function App() {
+
   return (
-    <Routes>
 
-      {/* Landing Page */}
-      <Route
-        path="/"
-        element={<Home />}
-      />
+    <BrowserRouter>
 
-      {/* Auth Pages */}
-      <Route
-        path="/login"
-        element={<Login />}
-      />
+      <AuthProvider>
 
-      <Route
-        path="/signup"
-        element={<Signup />}
-      />
+        <Routes>
 
-      {/* Protected Dashboard */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+          {/* LOGIN */}
 
-      {/* Medicine Reminder */}
-      <Route
-        path="/reminders"
-        element={
-          <ProtectedRoute>
-            <MedicineReminder />
-          </ProtectedRoute>
-        }
-      />
+          <Route
 
-      {/* History */}
-      <Route
-        path="/history"
-        element={
-          <ProtectedRoute>
-            <History />
-          </ProtectedRoute>
-        }
-      />
+            path="/login"
 
-      {/* AI Chat */}
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute>
-            <ChatPage />
-          </ProtectedRoute>
-        }
-      />
+            element={<Login />}
+          />
 
-    </Routes>
+
+          {/* SIGNUP */}
+
+          <Route
+
+            path="/signup"
+
+            element={<Signup />}
+          />
+
+
+          {/* DASHBOARD */}
+
+          <Route
+
+            path="/dashboard"
+
+            element={
+
+              <ProtectedRoute>
+
+                <Dashboard />
+
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* CHAT */}
+
+          <Route
+
+            path="/chat"
+
+            element={
+
+              <ProtectedRoute>
+
+                <ChatPage />
+
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* HISTORY */}
+
+          <Route
+
+            path="/history"
+
+            element={
+
+              <ProtectedRoute>
+
+                <History />
+
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* ANALYTICS */}
+
+          <Route
+
+            path="/analytics"
+
+            element={
+
+              <ProtectedRoute>
+
+                <Analytics />
+
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* REMINDERS */}
+
+          <Route
+
+            path="/reminders"
+
+            element={
+
+              <ProtectedRoute>
+
+                <MedicineReminder />
+
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* DEFAULT */}
+
+          <Route
+
+            path="*"
+
+            element={
+
+              <Navigate
+
+                to="/login"
+              />
+            }
+          />
+
+        </Routes>
+
+      </AuthProvider>
+
+    </BrowserRouter>
   );
 }
