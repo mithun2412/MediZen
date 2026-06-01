@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
+import ReminderCard from "../components/dashboard/ReminderCard";
 
 import {
 
@@ -37,28 +38,25 @@ export default function MedicineReminder() {
 
   const { user } = useAuth();
 
-  const [medicine, setMedicine] =
-    useState("");
-
-  const [dosage, setDosage] =
-    useState("");
-
-  const [datetime, setDatetime] =
-    useState("");
-
-  const [reminders, setReminders] =
-    useState([]);
-
-
+ const [medicine, setMedicine] = useState("");
+const [dosage, setDosage] = useState("");
+const [reminderTime, setReminderTime] = useState("");
+const [endDate, setEndDate] = useState("");
+const [reminders, setReminders] =
+  useState([]);
   // ─────────────────────────────
   // FETCH REMINDERS
   // ─────────────────────────────
 
-  useEffect(() => {
+ useEffect(() => {
+
+  if (user?.id) {
 
     fetchReminders();
 
-  }, []);
+  }
+
+}, [user]);
 
 
   const fetchReminders =
@@ -93,40 +91,50 @@ export default function MedicineReminder() {
       try {
 
         if (
-          !medicine ||
-          !dosage ||
-          !datetime
-        ) {
+  !medicine ||
+  !dosage ||
+  !endDate ||
+  !reminderTime
+) {
 
-          alert(
-            "Please fill all fields"
-          );
+  alert(
+    "Please fill all fields"
+  );
 
-          return;
-        }
+  return;
+}
+
+if (
+  new Date(endDate) <
+  new Date()
+) {
+  alert(
+    "End date must be in the future"
+  );
+  return;
+}
 
         await createReminder({
 
-          user_id: user?.id,
+  user_id: user?.id,
 
-          medicine_name:
-            medicine,
+  medicine_name: medicine,
 
-          dosage,
+  dosage,
 
-          reminder_time:
-            datetime,
+  reminder_time: reminderTime,
 
-          // DEFAULT STATUS
-          status: "Pending",
-        });
+  end_date: endDate,
+
+  status: "Pending",
+});
 
         // CLEAR INPUTS
-        setMedicine("");
+       setMedicine("");
+setDosage("");
 
-        setDosage("");
-
-        setDatetime("");
+setEndDate("");
+setReminderTime("");
 
         // REFRESH
         fetchReminders();
@@ -264,249 +272,139 @@ export default function MedicineReminder() {
 
         {/* ADD REMINDER */}
 
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 mb-10">
+        {/* ADD REMINDER */}
 
-          <div className="grid md:grid-cols-4 gap-5">
+<div className="bg-white/5 border border-white/10 rounded-[32px] p-8 mb-10">
 
-            <input
+  <div className="grid md:grid-cols-2 gap-6">
 
-              type="text"
+    {/* MEDICINE NAME */}
 
-              placeholder="Medicine Name"
+    <div>
 
-              value={medicine}
+      <label className="block mb-2 text-cyan-300 font-semibold">
+        Medicine Name
+      </label>
 
-              onChange={(e) =>
-                setMedicine(
-                  e.target.value
-                )
-              }
+      <input
+        type="text"
+        value={medicine}
+        onChange={(e) =>
+          setMedicine(e.target.value)
+        }
+        placeholder="Paracetamol"
+        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4"
+      />
 
-              className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4"
-            />
+    </div>
 
-            <input
+    {/* DOSAGE */}
 
-              type="text"
+    <div>
 
-              placeholder="Dosage"
+      <label className="block mb-2 text-cyan-300 font-semibold">
+        Dosage
+      </label>
 
-              value={dosage}
+      <input
+        type="text"
+        value={dosage}
+        onChange={(e) =>
+          setDosage(e.target.value)
+        }
+        placeholder="500mg"
+        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4"
+      />
 
-              onChange={(e) =>
-                setDosage(
-                  e.target.value
-                )
-              }
+    </div>
 
-              className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4"
-            />
+    {/* REMINDER DATE TIME */}
 
-            <input
+    <div>
 
-              type="datetime-local"
+      <label className="block mb-2 text-cyan-300 font-semibold">
+        Reminder Time
+      </label>
 
-              value={datetime}
+     <input
+  type="time"
+  value={reminderTime}
+  onChange={(e) =>
+    setReminderTime(e.target.value)
+  }
+  className="
+    w-full
+    bg-slate-900
+    border
+    border-slate-700
+    rounded-xl
+    px-4
+    py-3
+    text-white
+  "
+/>
 
-              onChange={(e) =>
-                setDatetime(
-                  e.target.value
-                )
-              }
+    </div>
 
-              className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 color-scheme-dark"
-            />
+    {/* END DATE */}
 
-            <button
+    <div>
 
-              onClick={
-                handleAddReminder
-              }
+      <label className="block mb-2 text-cyan-300 font-semibold">
+        Continue Medicine Till
+      </label>
 
-              className="bg-cyan-400 hover:bg-cyan-300 text-black font-black rounded-2xl"
-            >
+      <input
+  type="date"
+  value={endDate}
+  onChange={(e) =>
+    setEndDate(e.target.value)
+  }
+  className="
+    w-full
+    bg-slate-900
+    border
+    border-slate-700
+    rounded-xl
+    px-4
+    py-3
+    text-white
+  "
+/>
 
-              Add Reminder
+    </div>
 
-            </button>
+  </div>
 
-          </div>
+  <button
 
-        </div>
+    onClick={handleAddReminder}
+
+    className="mt-6 w-full bg-cyan-400 hover:bg-cyan-300 text-black font-black py-4 rounded-2xl"
+
+  >
+
+    Add Reminder
+
+  </button>
+
+</div>
 
 
         {/* REMINDER LIST */}
 
         <div className="grid xl:grid-cols-2 gap-8">
 
-          {reminders.map(
-
-            (reminder) => (
-
-              <motion.div
-
-                key={reminder.id}
-
-                whileHover={{
-
-                  y: -4,
-                }}
-
-                className="bg-white/5 border border-white/10 rounded-[32px] p-8"
-              >
-
-                {/* TOP */}
-
-                <div className="flex justify-between">
-
-                  <div>
-
-                    <h2 className="text-3xl font-black">
-
-                      {
-                        reminder.medicine_name
-                      }
-
-                    </h2>
-
-                    <p className="text-slate-400 mt-2">
-
-                      {reminder.dosage}
-
-                    </p>
-
-                  </div>
-
-
-                  {/* DELETE */}
-
-                  <button
-
-                    onClick={() =>
-                      handleDelete(
-                        reminder.id
-                      )
-                    }
-
-                    className="w-12 h-12 rounded-2xl bg-red-500/10 hover:bg-red-500/20 transition"
-                  >
-
-                    <Trash2 className="text-red-300 w-5 h-5 mx-auto" />
-
-                  </button>
-
-                </div>
-
-
-                {/* TIME */}
-
-                <div className="flex items-center gap-3 mt-8">
-
-                  <Clock3 className="text-cyan-300 w-5 h-5" />
-
-                  <span>
-
-                    {new Date(
-                      reminder.reminder_time
-                    ).toLocaleString()}
-
-                  </span>
-
-                </div>
-
-
-                {/* STATUS */}
-
-                <div className="flex items-center gap-3 mt-4">
-
-                  <CalendarDays className="text-cyan-300 w-5 h-5" />
-
-                  <span>
-
-                    Status:
-                    {" "}
-
-                    <span
-                      className={
-                        reminder.status ===
-                        "Taken"
-
-                          ? "text-emerald-400 font-bold"
-
-                          : reminder.status ===
-                            "Missed"
-
-                          ? "text-red-400 font-bold"
-
-                          : "text-yellow-400 font-bold"
-                      }
-                    >
-
-                      {reminder.status}
-
-                    </span>
-
-                  </span>
-
-                </div>
-
-
-                {/* ACTION BUTTONS */}
-
-                {
-                  reminder.status ===
-                    "Pending" && (
-
-                    <div className="flex gap-4 mt-8">
-
-                      {/* TAKEN */}
-
-                      <button
-
-                        onClick={() =>
-                          handleStatus(
-
-                            reminder.id,
-
-                            "Taken"
-                          )
-                        }
-
-                        className="flex-1 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-black transition"
-                      >
-
-                        Taken
-
-                      </button>
-
-
-                      {/* MISSED */}
-
-                      <button
-
-                        onClick={() =>
-                          handleStatus(
-
-                            reminder.id,
-
-                            "Missed"
-                          )
-                        }
-
-                        className="flex-1 py-4 rounded-2xl bg-red-500 hover:bg-red-400 text-white font-black transition"
-                      >
-
-                        Missed
-
-                      </button>
-
-                    </div>
-                  )
-                }
-
-              </motion.div>
-            )
-          )}
+          {reminders.map((reminder) => (
+
+  <ReminderCard
+    key={reminder.id}
+    reminder={reminder}
+    onDelete={handleDelete}
+    onStatus={handleStatus}
+  />
+
+))}
 
         </div>
 

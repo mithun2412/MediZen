@@ -18,6 +18,9 @@ from app.database import get_db
 from app.services.ai_conversation_service import (
     generate_ai_response
 )
+from app.services.ai_post_report_service import (
+    generate_post_report_answer
+)
 
 from app.services.ai_followup_service import (
     generate_ai_followup
@@ -47,6 +50,7 @@ from app.services.pdf_service import (
 from app.services.hospital_service import (
     get_nearby_hospitals
 )
+from app.models.models import Conversation
 
 router = APIRouter()
 
@@ -136,6 +140,60 @@ def ai_chat(
             )
         )
 
+
+        conversation = (
+            db.query(Conversation)
+            .filter(
+                Conversation.id == conversation_id
+            )
+            .first()
+        )
+
+        if conversation and conversation.report_generated:
+
+            followup_result = (
+
+                generate_post_report_answer(
+
+                    user_input=
+                        request.message,
+
+                    conversation_history=
+                        conversation_history
+                )
+            )
+
+            return {
+
+                "success": True,
+
+                "conversation_id":
+                    conversation_id,
+
+                "response":
+                    followup_result["response"],
+
+                "options":
+                    [],
+
+                "severity":
+                    None,
+
+                "severity_reason":
+                    None,
+
+                "report_ready":
+                    True,
+
+                "report":
+                    None,
+
+                "pdf_url":
+                    None,
+
+                "hospitals":
+                    []
+            }
         # ─────────────────────────
         # AI FOLLOW-UP
         # ─────────────────────────
@@ -163,6 +221,11 @@ def ai_chat(
         report_ready = (
             followup_result["report_ready"]
         )
+        if report_ready and conversation:
+
+            conversation.report_generated = True
+
+            db.commit()
 
         # ─────────────────────────
         # SAVE AI MESSAGE

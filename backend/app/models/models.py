@@ -5,12 +5,15 @@ from datetime import datetime
 from sqlalchemy import (
 
     Column,
+    Date,
     Integer,
     String,
     Text,
     DateTime,
     ForeignKey,
+    Time
 )
+from sqlalchemy import Boolean
 
 from sqlalchemy.orm import relationship
 
@@ -153,54 +156,19 @@ class MedicineReminder(Base):
 
     __tablename__ = "medicine_reminders"
 
-    id = Column(
+    id = Column(String, primary_key=True)
 
-        String,
+    user_id = Column(Integer)
 
-        primary_key=True,
+    medicine_name = Column(String)
 
-        index=True,
+    dosage = Column(String)
 
-        default=lambda: str(uuid.uuid4())
-    )
+    reminder_time = Column(Time)
 
-    user_id = Column(
+    end_date = Column(Date)
 
-        Integer,
-
-        ForeignKey("users.id"),
-
-        nullable=False
-    )
-
-    medicine_name = Column(
-
-        String,
-
-        nullable=False
-    )
-
-    dosage = Column(
-
-        String,
-
-        nullable=False
-    )
-
-    reminder_time = Column(
-
-        DateTime,
-
-        nullable=False
-    )
-
-    status = Column(
-
-        String,
-
-        default="Pending"
-    )
-
+    status = Column(String)
     created_at = Column(
 
         DateTime,
@@ -305,67 +273,54 @@ class DoseLog(Base):
 # ─────────────────────────────────────────────
 # CONVERSATIONS
 # ─────────────────────────────────────────────
-
 class Conversation(Base):
 
     __tablename__ = "conversations"
 
     id = Column(
-
         Integer,
-
         primary_key=True,
-
         index=True
     )
 
     user_id = Column(
-
         Integer,
-
         ForeignKey("users.id"),
-
         nullable=False
     )
 
     title = Column(
-
         String(255),
-
         nullable=True
     )
 
+    report_generated = Column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
+
     created_at = Column(
-
         DateTime,
-
         default=datetime.utcnow
     )
 
     updated_at = Column(
-
         DateTime,
-
         default=datetime.utcnow,
-
         onupdate=datetime.utcnow
     )
 
     # RELATIONSHIPS
 
     user = relationship(
-
         "User",
-
         back_populates="conversations"
     )
 
     messages = relationship(
-
         "Message",
-
         back_populates="conversation",
-
         cascade="all, delete-orphan"
     )
 

@@ -197,7 +197,7 @@ export default function ChatPage() {
       // BACKEND REQUEST
       const response = await sendMessage({
 
-        user_id: 1,
+        user_id: user.id,
 
         message: finalMessage,
 

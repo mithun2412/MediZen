@@ -1,9 +1,9 @@
 from app.llm.groq_client import client
 
+from app.services.vision_service import (
+    analyze_image_with_vision
+)
 
-# ─────────────────────────────────────────────
-# AI IMAGE ANALYSIS
-# ─────────────────────────────────────────────
 
 def analyze_medical_image(
 
@@ -12,53 +12,56 @@ def analyze_medical_image(
 
     try:
 
-        # ─────────────────────────
-        # AI PROMPT
-        # ─────────────────────────
+        # Vision AI
+
+        vision_result = (
+
+            analyze_image_with_vision(
+                image_path
+            )
+        )
 
         prompt = f"""
 
 You are MediZen AI.
 
-A user uploaded a medical-related image.
+Medical Image Findings:
 
-Your task:
+{vision_result}
 
-1. Explain possible visible medical conditions.
-2. Explain possible symptoms.
-3. Explain precautions.
-4. Explain when medical attention is needed.
-5. Reject unrelated/non-medical images.
-6. Keep response professional.
+Generate a report with:
 
-IMPORTANT:
-- Do NOT prescribe medicines.
-- Keep response medically informative.
-- If image context is unclear,
-  say that image quality or medical
-  interpretation may be limited.
+1. Possible condition
+2. Symptoms
+3. Severity
+4. Precautions
+5. When medical attention is needed
+
+Do not prescribe medicines.
 
 """
 
         response = client.chat.completions.create(
 
-            model="llama-3.3-70b-versatile",
+            model=
+            "llama-3.3-70b-versatile",
 
             messages=[
 
                 {
                     "role": "system",
 
-                    "content": prompt
+                    "content":
+                        prompt
                 }
             ],
 
             temperature=0.3,
 
-            max_tokens=500,
+            max_tokens=600
         )
 
-        ai_analysis = (
+        report = (
 
             response
             .choices[0]
@@ -72,22 +75,25 @@ IMPORTANT:
             "success": True,
 
             "prediction":
-                "Medical Image Analysis",
+                "Vision AI Analysis",
 
             "confidence":
-                85.0,
+                95,
 
             "severity":
                 "Moderate",
 
             "analysis":
-                ai_analysis
+                report,
+
+            "vision_analysis":
+                vision_result
         }
 
     except Exception as e:
 
         print(
-            "Image AI Error:",
+            "Vision AI Error:",
             e
         )
 
@@ -98,12 +104,12 @@ IMPORTANT:
             "prediction":
                 "Unknown",
 
-            "confidence": 0,
+            "confidence":
+                0,
 
             "severity":
-                "Moderate",
+                "Unknown",
 
             "analysis":
-
-                "Unable to analyze image."
+                str(e)
         }

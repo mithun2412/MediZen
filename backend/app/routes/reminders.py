@@ -6,9 +6,10 @@ from app.database import get_db
 
 from app.models.models import MedicineReminder
 
-from datetime import datetime
+
 import uuid
 
+from datetime import datetime, time
 
 router = APIRouter(
 
@@ -40,9 +41,15 @@ def create_reminder(
 
         dosage=data["dosage"],
 
-        reminder_time=datetime.fromisoformat(
-            data["reminder_time"]
-        ),
+        reminder_time=datetime.strptime(
+            data["reminder_time"],
+            "%H:%M"
+        ).time(),
+
+        end_date=datetime.strptime(
+            data["end_date"],
+            "%Y-%m-%d"
+        ).date(),
 
         status="Pending"
     )
@@ -63,8 +70,6 @@ def create_reminder(
             "id": reminder.id
         }
     }
-
-
 # ─────────────────────────────────────────────
 # GET REMINDERS
 # ─────────────────────────────────────────────

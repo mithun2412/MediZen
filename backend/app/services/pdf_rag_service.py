@@ -178,7 +178,8 @@ def retrieve_relevant_chunks(
             results.append(
                 document_chunks[idx]
             )
-
+    print("Chunks:", len(document_chunks))
+    print("Index:", vector_index is not None)
     return results
 
 
@@ -199,6 +200,17 @@ def ask_pdf_question(
                 question
             )
         )
+
+        # DEBUG HERE
+        print("\n" + "=" * 50)
+        print("QUESTION:", question)
+        print("RETRIEVED CHUNKS:")
+
+        for chunk in relevant_chunks:
+            print(chunk[:500])
+            print("-" * 50)
+
+        print("=" * 50 + "\n")
 
         context = "\n\n".join(
             relevant_chunks
