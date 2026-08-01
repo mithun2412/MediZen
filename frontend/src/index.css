@@ -6,3 +6,34 @@ body {
   font-family: Inter, sans-serif;
   background: #f3f4f6;
 }
+
+/* Shared light workspace palette for pages that previously used the dark UI. */
+.medivoice-light-theme {
+  color: #12231f;
+}
+
+.medivoice-light-theme [class~="bg-white/5"],
+.medivoice-light-theme [class~="bg-white/[0.04]"],
+.medivoice-light-theme [class~="bg-white/[0.045]"],
+.medivoice-light-theme [class~="bg-black/20"],
+.medivoice-light-theme [class~="bg-zinc-900"],
+.medivoice-light-theme [class~="bg-slate-900/50"] {
+  background-color: #ffffff !important;
+}
+
+.medivoice-light-theme [class~="border-white/10"],
+.medivoice-light-theme [class~="border-white/20"] {
+  border-color: #e1e7e4 !important;
+}
+
+.medivoice-light-theme [class~="text-white"],
+.medivoice-light-theme [class~="text-slate-100"],
+.medivoice-light-theme [class~="text-slate-200"],
+.medivoice-light-theme [class~="text-slate-300"] {
+  color: #12231f !important;
+}
+
+.medivoice-light-theme [class~="text-slate-400"],
+.medivoice-light-theme [class~="text-slate-500"] {
+  color: #5b6e68 !important;
+}

@@ -24,6 +24,8 @@ import Analytics from "./pages/Analytics";
 
 import MedicineReminder from "./pages/MedicineReminder";
 
+import MedicationTracker from "./pages/MedicationTracker";
+
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 
 import {
@@ -50,6 +52,15 @@ export default function App() {
             path="/login"
 
             element={<Login />}
+          />
+
+          <Route
+            path="/medication-tracker"
+            element={
+              <ProtectedRoute>
+                <MedicationTracker />
+              </ProtectedRoute>
+            }
           />
 
 
@@ -92,6 +103,15 @@ export default function App() {
 
                 <ChatPage />
 
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/report-analysis"
+            element={
+              <ProtectedRoute>
+                <ChatPage reportMode />
               </ProtectedRoute>
             }
           />

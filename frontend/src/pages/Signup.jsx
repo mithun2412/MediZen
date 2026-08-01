@@ -91,7 +91,7 @@ export default function Signup() {
         }
       );
 
-      navigate("/dashboard");
+      navigate("/login");
 
     } catch (err) {
 
@@ -113,7 +113,7 @@ export default function Signup() {
 
   return (
 
-    <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center px-6">
+    <div className="medivoice-light-theme min-h-screen bg-[#F6F8F7] text-[#12231F] overflow-hidden relative flex items-center justify-center px-6">
 
       {/* BACKGROUND */}
 

@@ -1,380 +1,174 @@
+# app/models/models.py
+
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, Boolean, JSON
+from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
+from app.core.database import  Base
+from datetime import datetime
 import uuid
 
-from datetime import datetime
-
-from sqlalchemy import (
-
-    Column,
-    Date,
-    Integer,
-    String,
-    Text,
-    DateTime,
-    ForeignKey,
-    Time
-)
-from sqlalchemy import Boolean
-
-from sqlalchemy.orm import relationship
-
-from app.database import Base
-
-
-# ─────────────────────────────────────────────
-# USER
-# ─────────────────────────────────────────────
-
 class User(Base):
-
     __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    password = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
+    reminders = relationship("MedicineReminder", back_populates="user", cascade="all, delete-orphan")
+    reports = relationship("Report", back_populates="user", cascade="all, delete-orphan")
+    symptom_history = relationship("SymptomHistory", back_populates="user", cascade="all, delete-orphan")
+    medication_logs = relationship("MedicationLog", back_populates="user", cascade="all, delete-orphan")
+    health_analytics = relationship("HealthAnalytics", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    symptom_trends = relationship("SymptomTrend", back_populates="user", cascade="all, delete-orphan")
 
-    id = Column(
-        Integer,
-        primary_key=True,
-        index=True
-    )
-
-    name = Column(
-        String(100),
-        nullable=False
-    )
-
-    email = Column(
-        String(150),
-        unique=True,
-        index=True,
-        nullable=False
-    )
-
-    hashed_password = Column(
-        String(255),
-        nullable=False
-    )
-
-    created_at = Column(
-        DateTime,
-        default=datetime.utcnow
-    )
-
-    # RELATIONSHIPS
-
-    symptoms = relationship(
-
-        "SymptomHistory",
-
-        back_populates="user",
-
-        cascade="all, delete-orphan"
-    )
-
-    medicine_reminders = relationship(
-
-        "MedicineReminder",
-
-        back_populates="user",
-
-        cascade="all, delete-orphan"
-    )
-
-    dose_logs = relationship(
-
-        "DoseLog",
-
-        back_populates="user",
-
-        cascade="all, delete-orphan"
-    )
-
-    conversations = relationship(
-
-        "Conversation",
-
-        back_populates="user",
-
-        cascade="all, delete-orphan"
-    )
-
-
-# ─────────────────────────────────────────────
-# SYMPTOM HISTORY
-# ─────────────────────────────────────────────
-
-class SymptomHistory(Base):
-
-    __tablename__ = "symptom_history"
-
-    id = Column(
-        Integer,
-        primary_key=True,
-        index=True
-    )
-
-    user_id = Column(
-
-        Integer,
-
-        ForeignKey("users.id"),
-
-        nullable=False
-    )
-
-    symptom = Column(
-        Text,
-        nullable=False
-    )
-
-    analysis = Column(
-        Text,
-        nullable=False
-    )
-
-    severity = Column(
-        String(20),
-        nullable=False
-    )
-
-    created_at = Column(
-
-        DateTime,
-
-        default=datetime.utcnow
-    )
-
-    user = relationship(
-
-        "User",
-
-        back_populates="symptoms"
-    )
-
-
-# ─────────────────────────────────────────────
-# MEDICINE REMINDERS
-# ─────────────────────────────────────────────
-
-class MedicineReminder(Base):
-
-    __tablename__ = "medicine_reminders"
-
-    id = Column(String, primary_key=True)
-
-    user_id = Column(Integer)
-
-    medicine_name = Column(String)
-
-    dosage = Column(String)
-
-    reminder_time = Column(Time)
-
-    end_date = Column(Date)
-
-    status = Column(String)
-    created_at = Column(
-
-        DateTime,
-
-        default=datetime.utcnow
-    )
-
-    # RELATIONSHIPS
-
-    user = relationship(
-
-        "User",
-
-        back_populates="medicine_reminders"
-    )
-
-    dose_logs = relationship(
-
-        "DoseLog",
-
-        back_populates="reminder",
-
-        cascade="all, delete-orphan"
-    )
-
-
-# ─────────────────────────────────────────────
-# DOSE LOGS
-# ─────────────────────────────────────────────
-
-class DoseLog(Base):
-
-    __tablename__ = "dose_logs"
-
-    id = Column(
-
-        Integer,
-
-        primary_key=True,
-
-        index=True
-    )
-
-    reminder_id = Column(
-
-        String,
-
-        ForeignKey(
-            "medicine_reminders.id"
-        ),
-
-        nullable=False
-    )
-
-    user_id = Column(
-
-        Integer,
-
-        ForeignKey("users.id"),
-
-        nullable=False
-    )
-
-    status = Column(
-
-        String(50),
-
-        nullable=False
-    )
-
-    snoozed_until = Column(
-
-        DateTime,
-
-        nullable=True
-    )
-
-    logged_at = Column(
-
-        DateTime,
-
-        default=datetime.utcnow
-    )
-
-    # RELATIONSHIPS
-
-    user = relationship(
-
-        "User",
-
-        back_populates="dose_logs"
-    )
-
-    reminder = relationship(
-
-        "MedicineReminder",
-
-        back_populates="dose_logs"
-    )
-
-
-# ─────────────────────────────────────────────
-# CONVERSATIONS
-# ─────────────────────────────────────────────
 class Conversation(Base):
-
     __tablename__ = "conversations"
-
-    id = Column(
-        Integer,
-        primary_key=True,
-        index=True
-    )
-
-    user_id = Column(
-        Integer,
-        ForeignKey("users.id"),
-        nullable=False
-    )
-
-    title = Column(
-        String(255),
-        nullable=True
-    )
-
-    report_generated = Column(
-        Boolean,
-        default=False,
-        nullable=False
-    )
-
-    created_at = Column(
-        DateTime,
-        default=datetime.utcnow
-    )
-
-    updated_at = Column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
-    )
-
-    # RELATIONSHIPS
-
-    user = relationship(
-        "User",
-        back_populates="conversations"
-    )
-
-    messages = relationship(
-        "Message",
-        back_populates="conversation",
-        cascade="all, delete-orphan"
-    )
-
-
-# ─────────────────────────────────────────────
-# MESSAGES
-# ─────────────────────────────────────────────
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String, nullable=True)
+    report_generated = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Added
+    
+    user = relationship("User", back_populates="conversations")
+    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
 
 class Message(Base):
-
     __tablename__ = "messages"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False)
+    role = Column(String, nullable=False)  # 'user' or 'assistant'
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Added
+    
+    conversation = relationship("Conversation", back_populates="messages")
 
-    id = Column(
+class Report(Base):
+    __tablename__ = "reports"
+    
+    id = Column(String, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String, nullable=True)
+    file_path = Column(String, nullable=True)
+    content = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Added
+    
+    user = relationship("User", back_populates="reports")
 
-        Integer,
+class SymptomHistory(Base):
+    __tablename__ = "symptom_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    symptom = Column(String, nullable=False)
+    severity = Column(String, nullable=True)
+    duration = Column(String, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    # Episodes are retained after recovery so historical and recurrence metrics
+    # never lose clinical context.
+    status = Column(String(16), nullable=False, default="Active", index=True)
+    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    resolved_at = Column(DateTime, nullable=True)
+    
+    user = relationship("User", back_populates="symptom_history")
 
-        primary_key=True,
+class MedicineReminder(Base):
+    __tablename__ = "medicine_reminders"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    medicine_name = Column(String, nullable=False)
+    dosage = Column(String, nullable=True)
+    frequency = Column(String, nullable=True)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Added
+    is_active = Column(Boolean, default=True)
+    
+    user = relationship("User", back_populates="reminders")
+    dose_logs = relationship("DoseLog", back_populates="reminder", cascade="all, delete-orphan")
 
-        index=True
-    )
+class DoseLog(Base):
+    __tablename__ = "dose_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    reminder_id = Column(UUID(as_uuid=True), ForeignKey("medicine_reminders.id"), nullable=False)
+    taken_at = Column(DateTime, default=datetime.utcnow)
+    status = Column(String, default="taken")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    reminder = relationship("MedicineReminder", back_populates="dose_logs")
 
-    conversation_id = Column(
 
-        Integer,
+class MedicationLog(Base):
+    """Immutable per-dose tracking record used by analytics and the medication tracker."""
+    __tablename__ = "medication_logs"
 
-        ForeignKey("conversations.id"),
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    reminder_id = Column(String, nullable=True, index=True)
+    medicine_name = Column(String, nullable=False)
+    scheduled_time = Column(DateTime, nullable=False, index=True)
+    status = Column(String(16), nullable=False, default="Pending")
+    taken_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-        nullable=False
-    )
+    user = relationship("User", back_populates="medication_logs")
 
-    role = Column(
 
-        String(50),
+class HealthAnalytics(Base):
+    __tablename__ = "health_analytics"
 
-        nullable=False
-    )
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    health_score = Column(Integer, nullable=False, default=100)
+    adherence_percentage = Column(Float, nullable=False, default=0)
+    risk_level = Column(String(16), nullable=False, default="Low")
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    content = Column(
+    user = relationship("User", back_populates="health_analytics")
 
-        Text,
 
-        nullable=False
-    )
+class SymptomTrend(Base):
+    __tablename__ = "symptom_trends"
 
-    created_at = Column(
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    symptom_name = Column(String, nullable=False)
+    severity = Column(String(16), nullable=False)
+    recorded_date = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
 
-        DateTime,
+    user = relationship("User", back_populates="symptom_trends")
 
-        default=datetime.utcnow
-    )
+class ReportParameter(Base):
+    __tablename__ = "report_parameters"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    report_id = Column(String, ForeignKey("reports.id"), nullable=False)
+    parameter_name = Column(String, nullable=False)
+    parameter_value = Column(String, nullable=True)
+    unit = Column(String, nullable=True)
+    reference_range = Column(String, nullable=True)
+    is_abnormal = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Added
 
-    conversation = relationship(
-
-        "Conversation",
-
-        back_populates="messages"
-    )
+class ReportChat(Base):
+    __tablename__ = "report_chats"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    report_id = Column(String, ForeignKey("reports.id"), nullable=False)
+    question = Column(Text, nullable=False)
+    answer = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Added

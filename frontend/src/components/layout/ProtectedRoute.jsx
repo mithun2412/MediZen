@@ -23,7 +23,7 @@ export default function ProtectedRoute({
 
     return (
 
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="medivoice-light-theme min-h-screen bg-[#F6F8F7] text-[#12231F] flex items-center justify-center">
 
         <div className="animate-pulse text-cyan-400 text-xl font-bold">
 

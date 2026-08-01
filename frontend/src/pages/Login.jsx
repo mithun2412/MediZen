@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { motion } from "framer-motion";
 
@@ -28,6 +28,7 @@ import { useAuth } from "../context/AuthContext";
 export default function Login() {
 
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
 
@@ -96,8 +97,7 @@ export default function Login() {
 );
 
       // SUCCESS REDIRECT
-      window.location.href =
-        "/dashboard";
+      navigate("/dashboard", { replace: true });
 
     } catch (err) {
 
@@ -119,7 +119,7 @@ export default function Login() {
 
   return (
 
-    <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center px-6">
+    <div className="medivoice-light-theme min-h-screen bg-[#F6F8F7] text-[#12231F] overflow-hidden relative flex items-center justify-center px-6">
 
       {/* BACKGROUND */}
 

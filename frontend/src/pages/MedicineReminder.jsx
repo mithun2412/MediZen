@@ -104,17 +104,14 @@ const [reminders, setReminders] =
   return;
 }
 
-if (
-  new Date(endDate) <
-  new Date()
-) {
+if (endDate < new Date().toISOString().slice(0, 10)) {
   alert(
     "End date must be in the future"
   );
   return;
 }
 
-        await createReminder({
+await createReminder({
 
   user_id: user?.id,
 
@@ -124,7 +121,7 @@ if (
 
   reminder_time: reminderTime,
 
-  end_date: endDate,
+  continue_medicine_until: endDate,
 
   status: "Pending",
 });
@@ -221,7 +218,7 @@ setReminderTime("");
 
   return (
 
-    <div className="min-h-screen bg-black text-white p-8">
+    <div className="medivoice-light-theme min-h-screen bg-[#F6F8F7] text-[#12231F] p-8">
 
       <div className="max-w-7xl mx-auto">
 
@@ -332,16 +329,8 @@ setReminderTime("");
   onChange={(e) =>
     setReminderTime(e.target.value)
   }
-  className="
-    w-full
-    bg-slate-900
-    border
-    border-slate-700
-    rounded-xl
-    px-4
-    py-3
-    text-white
-  "
+  aria-label="Reminder time"
+  className="reminder-date-input w-full cursor-pointer rounded-xl border border-cyan-400/40 bg-white px-4 py-3 text-[#12231F] [color-scheme:light] shadow-sm outline-none placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
 />
 
     </div>
@@ -354,23 +343,15 @@ setReminderTime("");
         Continue Medicine Till
       </label>
 
-      <input
-  type="date"
+ <input
+ type="date"
   value={endDate}
-  onChange={(e) =>
-    setEndDate(e.target.value)
-  }
-  className="
-    w-full
-    bg-slate-900
-    border
-    border-slate-700
-    rounded-xl
-    px-4
-    py-3
-    text-white
-  "
+  min={new Date().toISOString().slice(0, 10)}
+  onChange={(e) => setEndDate(e.target.value)}
+  aria-label="Continue medicine until"
+  className="reminder-date-input w-full cursor-pointer rounded-xl border border-cyan-400/40 bg-white px-4 py-3 text-[#12231F] [color-scheme:light] shadow-sm outline-none placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
 />
+
 
     </div>
 

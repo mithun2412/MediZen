@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 
-from app.database import get_db
+from app.core.database import get_db  # ✅ NEW
 
 from app.services.adherence_service import (
 

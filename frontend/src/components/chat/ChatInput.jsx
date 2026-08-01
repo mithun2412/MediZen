@@ -1,179 +1,47 @@
-import { motion } from "framer-motion";
+import { Loader2, Mic, MicOff, Send, Sparkles } from "lucide-react";
+import { useEffect, useRef } from "react";
 
-import {
+export default function ChatInput({ input, setInput, onSend, onVoiceRecord, isRecording = false, loading = false }) {
+  const inputRef = useRef(null);
 
-  Send,
+  useEffect(() => {
+    if (!loading) inputRef.current?.focus();
+  }, [loading]);
 
-  Mic,
-
-  Sparkles
-
-} from "lucide-react";
-import VoiceControls from "./VoiceControls";
-
-
-export default function ChatInput({
-
-  input,
-
-  setInput,
-
-  onSend
-
-}) {
-
-  // ─────────────────────────
-  // ENTER SEND
-  // ─────────────────────────
-
-  const handleKeyDown = (e) => {
-
-    if (
-
-      e.key === "Enter" &&
-
-      !e.shiftKey
-    ) {
-
-      e.preventDefault();
-
-      onSend();
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      if (input.trim() && !loading) onSend();
     }
   };
 
-
   return (
-
-    <div className="border-t border-white/10 bg-black/40 backdrop-blur-2xl px-6 py-5">
-
-      <div className="max-w-6xl mx-auto">
-
-        <motion.div
-
-          initial={{
-
-            opacity: 0,
-
-            y: 20,
-          }}
-
-          animate={{
-
-            opacity: 1,
-
-            y: 0,
-          }}
-
-          className="relative bg-white/5 border border-white/10 rounded-[32px] overflow-hidden shadow-[0_0_40px_rgba(0,255,255,0.05)]"
-        >
-
-          {/* GLOW */}
-
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-emerald-500/5 pointer-events-none" />
-
-
-          {/* INPUT ROW */}
-
-          <div className="flex items-end gap-4 p-4">
-
-            {/* AI ICON */}
-
-            <div className="hidden md:flex w-14 h-14 rounded-2xl bg-cyan-400 items-center justify-center shrink-0 shadow-xl">
-
-              <Sparkles className="text-black w-7 h-7" />
-
-            </div>
-
-
-            {/* TEXTAREA */}
-
-            <div className="flex-1">
-
-              <textarea
-
-                value={input}
-
-                onChange={(e) =>
-
-                  setInput(
-                    e.target.value
-                  )
-                }
-
-                onKeyDown={handleKeyDown}
-
-                rows={1}
-
-                placeholder="Describe your symptoms, upload reports, or ask healthcare questions..."
-
-                className="w-full resize-none bg-transparent text-white placeholder:text-slate-500 outline-none text-[16px] leading-7 max-h-40 overflow-y-auto py-3"
-              />
-
-            </div>
-
-
-            {/* VOICE CONTROLS */}
-
-<VoiceControls
-
-  setInput={setInput}
-
-  autoSend={false}
-
-  onSend={onSend}
-/>
-
-            {/* SEND */}
-
-            <motion.button
-
-              whileHover={{
-
-                scale: 1.05,
-              }}
-
-              whileTap={{
-
-                scale: 0.95,
-              }}
-
-              onClick={onSend}
-
-              disabled={!input.trim()}
-
-              className="w-14 h-14 rounded-2xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition shadow-[0_0_30px_rgba(0,255,255,0.3)]"
-            >
-
-              <Send className="text-black w-6 h-6" />
-
-            </motion.button>
-
+    <div className="border-t border-white/10 bg-slate-950/85 px-5 py-4 backdrop-blur-xl sm:px-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="flex items-end gap-3 rounded-3xl border border-white/10 bg-white/[0.045] p-3 shadow-[0_16px_45px_rgba(0,0,0,0.2)] focus-within:border-cyan-400/50 focus-within:ring-4 focus-within:ring-cyan-400/10">
+          <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-400 text-slate-950 sm:flex">
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
           </div>
-
-
-          {/* FOOTER */}
-
-          <div className="px-6 pb-4 flex items-center justify-between text-xs text-slate-500">
-
-            <p>
-
-              MediZen AI may generate inaccurate medical information.
-              Always consult healthcare professionals.
-
-            </p>
-
-            <p className="hidden md:block">
-
-              Press Enter ↵ to send
-
-            </p>
-
-          </div>
-
-        </motion.div>
-
+          <textarea
+            ref={inputRef}
+            autoFocus
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            disabled={loading}
+            placeholder="Describe how you feel or ask a health question…"
+            className="max-h-36 min-h-10 flex-1 resize-none bg-transparent py-2 text-[15px] leading-6 text-white outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
+          />
+          <button onClick={onVoiceRecord} disabled={loading} aria-label="Use voice input" className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border transition ${isRecording ? "border-rose-400/40 bg-rose-400/15 text-rose-300" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"}`}>
+            {isRecording ? <MicOff className="h-4 w-4 animate-pulse" /> : <Mic className="h-4 w-4" />}
+          </button>
+          <button onClick={onSend} disabled={!input.trim() || loading} aria-label="Send message" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-400 text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-40">
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+          </button>
+        </div>
+        <p className="mt-2 px-2 text-xs text-slate-500">Press Enter to send · Shift + Enter for a new line</p>
       </div>
-
     </div>
   );
 }

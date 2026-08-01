@@ -1,338 +1,70 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-
-import {
-  Activity,
-  AlertTriangle,
-  BrainCircuit,
-  HeartPulse,
-  ShieldAlert,
-  TrendingUp,
-} from "lucide-react";
-
-import { getDashboardAnalytics } from "../api/api";
-
+import { Activity, BrainCircuit, HeartPulse, ShieldAlert, Pill, TrendingUp } from "lucide-react";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { getDoseLogs, getHealthAnalyticsDashboard, getHealthHistory } from "../api/api";
 import { useAuth } from "../context/AuthContext";
+import { buildHealthMetrics } from "../utils/healthMetrics";
 
-import SeverityChart from "../components/analytics/SeverityChart";
-import SymptomChart from "../components/analytics/SymptomChart";
-import HealthScoreCard from "../components/analytics/HealthScoreCard";
-import AdherenceCard from "../components/analytics/AdherenceCard";
-import InsightCard from "../components/analytics/InsightCard";
-import StatCard from "../components/analytics/StatCard";
-import StressCard from "../components/analytics/StressCard";
+const ranges = ["7D", "30D", "90D"];
+const card = "rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl";
 
 export default function Analytics() {
   const { user } = useAuth();
-
+  const [range, setRange] = useState("30D");
   const [loading, setLoading] = useState(true);
-
-  const [analytics, setAnalytics] = useState(null);
-
-  // ─────────────────────────────
-  // FETCH ANALYTICS
-  // ─────────────────────────────
+  const [metrics, setMetrics] = useState(() => buildHealthMetrics());
 
   useEffect(() => {
-    fetchAnalytics();
-  }, []);
-
-  const fetchAnalytics = async () => {
-    try {
-      setLoading(true);
-
-      const response = await getDashboardAnalytics(1);
-
-      console.log("Analytics Response:", response.data);
-
-      setAnalytics(response.data);
-    } catch (err) {
-      console.log("Analytics Error:", err);
-    } finally {
+    if (!user?.id) return;
+    Promise.allSettled([getHealthHistory(user.id), getDoseLogs(user.id), getHealthAnalyticsDashboard()]).then(([history, logs, dashboard]) => {
+      const records = history.status === "fulfilled" ? history.value.data?.history || history.value.data || [] : [];
+      const doses = logs.status === "fulfilled" ? logs.value.data || [] : [];
+      const localMetrics = buildHealthMetrics(records, doses);
+      const apiMetrics = dashboard.status === "fulfilled" ? dashboard.value.data : null;
+      const apiInsights = apiMetrics?.ai_insights;
+      const medication = apiMetrics?.medication_statistics || {};
+      const insights = Array.isArray(apiInsights)
+        ? apiInsights
+        : apiInsights
+          ? [apiInsights.summary, ...(apiInsights.insights || []), ...(apiInsights.recommendations || [])].filter(Boolean)
+          : localMetrics.insights;
+      setMetrics(apiMetrics ? {
+        ...localMetrics,
+        healthScore: apiMetrics.health_score,
+        adherence: apiMetrics.adherence,
+        taken: medication.taken ?? localMetrics.taken,
+        pending: medication.pending ?? localMetrics.pending,
+        missed: medication.missed ?? localMetrics.missed,
+        risk: apiMetrics.risk_level,
+        symptoms: (apiMetrics.symptom_recurrence || apiMetrics.symptom_trends?.recurrence || localMetrics.symptoms).map((item) => ({ name: item.name || item.symptom, count: item.count })),
+        trend: localMetrics.trend,
+        insights,
+      } : localMetrics);
       setLoading(false);
-    }
-  };
-
-  // ─────────────────────────────
-  // SAFE FALLBACK DATA
-  // ─────────────────────────────
-
-  const stats = {
-    total_reports:
-      analytics?.total_reports ?? 22,
-
-    adherence_score:
-      analytics?.adherence_score ?? 84,
-
-    health_score:
-      analytics?.health_score ?? 81,
-
-    high_severity_cases:
-      analytics?.high_severity_cases ?? 4,
-
-    stress_level:
-      analytics?.stress_level ?? "Moderate",
-
-    recurring_symptoms:
-      Array.isArray(
-        analytics?.recurring_symptoms
-      )
-        ? analytics.recurring_symptoms
-        : [
-            {
-              name: "Fever",
-              count: 12,
-            },
-            {
-              name: "Cold",
-              count: 8,
-            },
-            {
-              name: "Chest Pain",
-              count: 5,
-            },
-            {
-              name: "Weakness",
-              count: 7,
-            },
-          ],
-
-    severity_distribution:
-      Array.isArray(
-        analytics?.severity_distribution
-      )
-        ? analytics.severity_distribution
-        : [
-            {
-              name: "Low",
-              value: 12,
-            },
-            {
-              name: "Moderate",
-              value: 7,
-            },
-            {
-              name: "High",
-              value: 3,
-            },
-          ],
-
-    ai_insights:
-      Array.isArray(
-        analytics?.ai_insights
-      )
-        ? analytics.ai_insights
-        : [
-            "Frequent fever-related symptoms detected over recent conversations.",
-            "Medicine adherence has improved consistently this week.",
-            "Very low recurrence of high-severity medical conditions.",
-            "Stress-related symptom patterns appear moderate.",
-          ],
-  };
-
-  return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
-
-      {/* BACKGROUND */}
-
-      <div className="absolute inset-0">
-        <div className="absolute top-[-120px] left-[-100px] w-[420px] h-[420px] bg-cyan-500/20 blur-[120px] rounded-full" />
-
-        <div className="absolute bottom-[-180px] right-[-120px] w-[420px] h-[420px] bg-emerald-500/20 blur-[120px] rounded-full" />
-      </div>
-
-      {/* GRID */}
-
-      <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:60px_60px]" />
-
-      {/* CONTENT */}
-
-      <div className="relative z-10 max-w-7xl mx-auto px-8 py-12">
-
-        {/* HEADER */}
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 20,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8"
-        >
-
-          {/* LEFT */}
-
-          <div>
-
-            <div className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-300 font-bold">
-              <Activity className="w-5 h-5" />
-              AI Healthcare Analytics
-            </div>
-
-            <h1 className="text-6xl font-black mt-8 leading-tight">
-              Health Intelligence Dashboard
-            </h1>
-
-            <p className="text-slate-400 text-xl leading-9 mt-6 max-w-3xl">
-              Analyze symptom recurrence,
-              adherence tracking,
-              severity trends,
-              and AI-generated healthcare insights.
-            </p>
-
-          </div>
-
-          {/* USER */}
-
-          <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 backdrop-blur-2xl min-w-[320px]">
-
-            <div className="flex items-center gap-5">
-
-              <div className="w-16 h-16 rounded-3xl bg-cyan-400 flex items-center justify-center">
-                <HeartPulse className="text-black w-8 h-8" />
-              </div>
-
-              <div>
-                <h3 className="text-2xl font-black">
-                  {user?.name || "User"}
-                </h3>
-
-                <p className="text-slate-400 mt-1">
-                  AI Healthcare Analytics
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
-        </motion.div>
-
-        {/* LOADING */}
-
-        {loading && (
-          <div className="flex justify-center mt-24">
-
-            <div className="animate-pulse text-cyan-300 text-2xl font-bold">
-              Loading analytics...
-            </div>
-
-          </div>
-        )}
-
-        {/* DASHBOARD */}
-
-        {!loading && (
-          <>
-
-            {/* TOP STATS */}
-
-            <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mt-14">
-
-              <StatCard
-                icon={BrainCircuit}
-                title="Total Reports"
-                value={stats.total_reports}
-                color="bg-cyan-400"
-              />
-
-              <StatCard
-                icon={TrendingUp}
-                title="Health Score"
-                value={`${stats.health_score}%`}
-                color="bg-emerald-400"
-              />
-
-              <StatCard
-                icon={ShieldAlert}
-                title="High Severity"
-                value={stats.high_severity_cases}
-                color="bg-red-400"
-              />
-
-              <StatCard
-                icon={AlertTriangle}
-                title="Stress Level"
-                value={stats.stress_level}
-                color="bg-yellow-400"
-              />
-
-            </div>
-
-            {/* SCORE CARDS */}
-
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 mt-10">
-
-              <HealthScoreCard
-
-  analytics={stats}
-/>
-
-              <AdherenceCard
-                adherence={stats.adherence_score}
-              />
-
-              <StressCard
-                stressLevel={stats.stress_level}
-              />
-
-            </div>
-
-            {/* CHARTS */}
-
-            <div className="grid xl:grid-cols-2 gap-8 mt-10">
-
-              <SeverityChart
-                data={stats.severity_distribution}
-              />
-
-              <SymptomChart
-                data={stats.recurring_symptoms}
-              />
-
-            </div>
-
-            {/* AI INSIGHTS */}
-
-            <div className="mt-10">
-
-              <div className="flex items-center gap-4 mb-8">
-                <BrainCircuit className="text-cyan-300 w-8 h-8" />
-
-                <h2 className="text-4xl font-black">
-                  AI Healthcare Insights
-                </h2>
-              </div>
-
-              <div className="grid xl:grid-cols-2 gap-6">
-
-                {stats.ai_insights.length > 0 ? (
-                  stats.ai_insights.map(
-                    (insight, index) => (
-                      <InsightCard
-                        key={index}
-                        insight={insight}
-                      />
-                    )
-                  )
-                ) : (
-                  <div className="text-slate-400">
-                    No AI insights available
-                  </div>
-                )}
-
-              </div>
-
-            </div>
-
-          </>
-        )}
-
-      </div>
-
+    });
+  }, [user?.id]);
+
+  const visibleTrend = metrics.trend.slice(-({ "7D": 7, "30D": 30, "90D": 90 }[range]));
+  const riskColor = { Low: "text-emerald-300", Medium: "text-amber-300", High: "text-rose-300" }[metrics.risk];
+  return <main className="medivoice-light-theme min-h-screen bg-[#F6F8F7] px-5 py-8 text-[#12231F] sm:px-8">
+    <div className="mx-auto max-w-7xl space-y-7">
+      <header className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <div><span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200"><Activity className="h-4 w-4" /> Health analytics</span><h1 className="mt-4 text-4xl font-black sm:text-5xl">Your health, in context.</h1><p className="mt-3 max-w-2xl text-slate-400">Review patterns from your reports, symptoms, and medication history.</p></div>
+        <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">{ranges.map((item) => <button key={item} onClick={() => setRange(item)} className={`rounded-lg px-4 py-2 text-sm ${range === item ? "bg-cyan-400 font-bold text-slate-950" : "text-slate-400"}`}>{item}</button>)}</div>
+      </header>
+      {loading ? <div className="grid gap-5 md:grid-cols-4">{[1,2,3,4].map((i) => <div key={i} className="h-36 animate-pulse rounded-3xl bg-white/5" />)}</div> : <>
+        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <ScoreCard icon={HeartPulse} title="Health score" value={`${metrics.healthScore}/100`} note={metrics.status} />
+          <ScoreCard icon={Pill} title="Medication adherence" value={`${metrics.adherence}%`} note={`${metrics.taken} taken · ${metrics.pending} pending`} />
+          <ScoreCard icon={TrendingUp} title="Most common symptom" value={metrics.symptoms[0]?.name || "No data"} note={metrics.symptoms[0] ? `${metrics.symptoms[0].count} recorded entries` : "Start a health chat"} />
+          <ScoreCard icon={ShieldAlert} title="Risk assessment" value={metrics.risk} note="Based on recorded symptom severity" risk={riskColor} />
+        </section>
+        <section className="grid gap-5 xl:grid-cols-2"><ChartCard title="Severity trend" subtitle="Reported symptom severity over time"><ResponsiveContainer width="100%" height={250}><AreaChart data={visibleTrend}><defs><linearGradient id="severity" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#22d3ee" stopOpacity=".55"/><stop offset="100%" stopColor="#22d3ee" stopOpacity="0"/></linearGradient></defs><CartesianGrid stroke="#ffffff12" vertical={false}/><XAxis dataKey="date" stroke="#94a3b8"/><YAxis domain={[0,3]} stroke="#94a3b8"/><Tooltip/><Area dataKey="severity" stroke="#22d3ee" fill="url(#severity)" /></AreaChart></ResponsiveContainer></ChartCard><ChartCard title="Symptom recurrence" subtitle="Most frequently reported symptoms"><ResponsiveContainer width="100%" height={250}><BarChart data={metrics.symptoms}><CartesianGrid stroke="#ffffff12" vertical={false}/><XAxis dataKey="name" stroke="#94a3b8"/><YAxis stroke="#94a3b8"/><Tooltip/><Bar dataKey="count" fill="#34d399" radius={[8,8,0,0]} /></BarChart></ResponsiveContainer></ChartCard></section>
+        <section className="grid gap-5 xl:grid-cols-3"><div className={`${card} xl:col-span-2`}><div className="mb-5 flex items-center gap-3"><BrainCircuit className="text-cyan-300"/><div><h2 className="font-bold">AI healthcare insights</h2><p className="text-sm text-slate-400">Observations based on available history</p></div></div><div className="space-y-3">{metrics.insights.map((insight) => <div key={insight} className="rounded-2xl border border-cyan-400/10 bg-cyan-400/[.04] p-4 text-sm leading-6 text-slate-300">{insight}</div>)}</div></div><div className={card}><h2 className="font-bold">Suggested next step</h2><p className={`mt-5 text-3xl font-black ${riskColor}`}>{metrics.risk} risk</p><p className="mt-3 text-sm leading-6 text-slate-400">{metrics.risk === "High" ? "Arrange timely clinical advice, especially if symptoms are new, severe, or worsening." : "Keep logging symptoms and medication doses to make future insights more precise."}</p></div></section>
+      </>}
     </div>
-  );
+  </main>;
 }
+function ScoreCard({ icon: Icon, title, value, note, risk = "text-white" }) { return <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} className={card}><Icon className="mb-5 h-6 w-6 text-cyan-300"/><p className="text-sm text-slate-400">{title}</p><p className={`mt-2 text-2xl font-black ${risk}`}>{value}</p><p className="mt-2 text-xs text-slate-500">{note}</p></motion.div>; }
+function ChartCard({ title, subtitle, children }) { return <div className={card}><h2 className="font-bold">{title}</h2><p className="mb-4 text-sm text-slate-400">{subtitle}</p>{children}</div>; }

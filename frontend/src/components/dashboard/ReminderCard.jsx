@@ -1,153 +1,27 @@
 import { motion } from "framer-motion";
-import {
-  Clock3,
-  CalendarDays,
-  Trash2,
-} from "lucide-react";
+import { Clock3, CalendarDays, Trash2 } from "lucide-react";
 
-export default function ReminderCard({
-  reminder,
-  onDelete,
-  onStatus,
-}) {
-  return (
-    <motion.div
-      whileHover={{ y: -4 }}
-      className="bg-white/5 border border-white/10 rounded-[32px] p-8"
-    >
-      {/* TOP */}
+const formatDate = (value, options) => {
+  if (!value) return "Not set";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Not set" : date.toLocaleString(undefined, options);
+};
 
-      <div className="flex justify-between">
+export default function ReminderCard({ reminder, onDelete }) {
+  // Support records created before and after the reminder model update.
+  const scheduledAt = reminder.start_date || reminder.reminder_time;
+  const endDate = reminder.end_date || reminder.continue_medicine_until;
+  const status = reminder.status || (reminder.is_active === false ? "Inactive" : "Active");
 
-        <div>
-
-          <h2 className="text-3xl font-black">
-            {reminder.medicine_name}
-          </h2>
-
-          <p className="text-slate-400 mt-2">
-            {reminder.dosage}
-          </p>
-
-        </div>
-
-        <button
-          onClick={() =>
-            onDelete(reminder.id)
-          }
-          className="w-12 h-12 rounded-2xl bg-red-500/10 hover:bg-red-500/20 transition"
-        >
-          <Trash2 className="text-red-300 w-5 h-5 mx-auto" />
-        </button>
-
-      </div>
-
-      {/* REMINDER TIME */}
-
-      <div className="flex items-center gap-3 mt-8">
-
-        <Clock3 className="text-cyan-300 w-5 h-5" />
-
-        <span>
-          {new Date(
-            reminder.reminder_time
-          ).toLocaleString()}
-        </span>
-
-      </div>
-
-      {/* END DATE */}
-
-      <div className="flex items-center gap-3 mt-4">
-
-        <CalendarDays className="text-cyan-300 w-5 h-5" />
-
-        <span>
-
-          Continue till:
-
-          {" "}
-
-          <span className="text-cyan-400 font-bold">
-
-            {reminder.end_date
-              ? new Date(
-                  reminder.end_date
-                ).toLocaleDateString()
-              : "Not Set"}
-
-          </span>
-
-        </span>
-
-      </div>
-
-      {/* STATUS */}
-
-      <div className="flex items-center gap-3 mt-4">
-
-        <CalendarDays className="text-cyan-300 w-5 h-5" />
-
-        <span>
-
-          Status:
-
-          {" "}
-
-          <span
-            className={
-              reminder.status === "Taken"
-                ? "text-emerald-400 font-bold"
-                : reminder.status ===
-                  "Missed"
-                ? "text-red-400 font-bold"
-                : "text-yellow-400 font-bold"
-            }
-          >
-
-            {reminder.status}
-
-          </span>
-
-        </span>
-
-      </div>
-
-      {/* ACTIONS */}
-
-      {reminder.status ===
-        "Pending" && (
-
-        <div className="flex gap-4 mt-8">
-
-          <button
-            onClick={() =>
-              onStatus(
-                reminder.id,
-                "Taken"
-              )
-            }
-            className="flex-1 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-black transition"
-          >
-            Taken
-          </button>
-
-          <button
-            onClick={() =>
-              onStatus(
-                reminder.id,
-                "Missed"
-              )
-            }
-            className="flex-1 py-4 rounded-2xl bg-red-500 hover:bg-red-400 text-white font-black transition"
-          >
-            Missed
-          </button>
-
-        </div>
-
-      )}
-
-    </motion.div>
-  );
+  return <motion.div whileHover={{ y: -4 }} className="rounded-[28px] border border-white/10 bg-white/5 p-7 shadow-xl shadow-black/10">
+    <div className="flex justify-between gap-4">
+      <div><h2 className="break-words text-2xl font-black">{reminder.medicine_name}</h2><p className="mt-1 text-slate-400">{reminder.dosage || "Dosage not specified"}</p></div>
+      <button aria-label={`Delete ${reminder.medicine_name} reminder`} onClick={() => onDelete(reminder.id)} className="h-11 w-11 shrink-0 rounded-2xl bg-red-500/10 transition hover:bg-red-500/20"><Trash2 className="mx-auto h-5 w-5 text-red-300" /></button>
+    </div>
+    <div className="mt-7 space-y-4 text-sm">
+      <p className="flex items-center gap-3"><Clock3 className="h-5 w-5 text-cyan-300" /><span>{formatDate(scheduledAt, { hour: "numeric", minute: "2-digit" })}</span></p>
+      <p className="flex items-center gap-3"><CalendarDays className="h-5 w-5 text-cyan-300" /><span>Continue till: <b className="text-cyan-300">{formatDate(endDate, { year: "numeric", month: "short", day: "numeric" })}</b></span></p>
+      <p className="flex items-center gap-3"><CalendarDays className="h-5 w-5 text-cyan-300" /><span>Status: <b className={status === "Active" ? "text-emerald-300" : "text-slate-300"}>{status}</b></span></p>
+    </div>
+  </motion.div>;
 }

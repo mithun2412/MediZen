@@ -85,10 +85,8 @@ export default function History() {
   // ─────────────────────────────
 
   useEffect(() => {
-
-    fetchHistory();
-
-  }, []);
+    if (user?.id) fetchHistory();
+  }, [user?.id]);
 
 
   const fetchHistory = async () => {
@@ -99,10 +97,10 @@ export default function History() {
 
       // API CALL
       const response =
-        await getHealthHistory(1);
+        await getHealthHistory(user.id);
 
       setHistory(
-        response.data || []
+        response.data?.history || response.data || []
       );
 
     } catch (err) {
@@ -133,7 +131,7 @@ export default function History() {
 
   return (
 
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
+    <div className="medivoice-light-theme min-h-screen bg-[#F6F8F7] text-[#12231F] overflow-hidden relative">
 
       {/* BACKGROUND */}
 
