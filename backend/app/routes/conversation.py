@@ -135,7 +135,15 @@ def ai_chat(
             symptom_workflow_active=symptom_active,
             report_context_active=bool(current_conversation and current_conversation.report_generated),
         )
-        if intent_result["intent"] != "SYMPTOM":
+        # A report-context route must reach the post-report Q&A handler below.
+        # Otherwise general questions asked after an assessment only return the
+        # raw report text instead of an answer to the user's question.
+        is_post_report_question = bool(
+            current_conversation
+            and current_conversation.report_generated
+            and intent_result["intent"] == "REPORT"
+        )
+        if intent_result["intent"] != "SYMPTOM" and not is_post_report_question:
             return _workflow_response(db, request, conversation_id, intent_result)
 
         lifecycle = apply_resolution_message(db, request.user_id, request.message)
