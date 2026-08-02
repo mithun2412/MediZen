@@ -1,4 +1,6 @@
-FROM python:3.13-slim
+# Several pinned ML/database dependencies provide wheels through Python 3.11.
+# Using 3.11 prevents pip from trying to compile them during the image build.
+FROM python:3.11-slim
 WORKDIR /app
 COPY requirements.txt requirements-dev.txt ./
 RUN python -m pip install --upgrade pip && pip install -r requirements.txt
