@@ -17,7 +17,7 @@ alembic==1.12.1
 # AI/ML
 groq==0.4.0
 sentence-transformers==2.6.1
-faiss-cpu 1.14.2
+faiss-cpu = 1.14.2
 transformers==4.44.2
 # The containers do not use a GPU; avoid downloading the multi-gigabyte CUDA build.
 torch==2.1.0+cpu
