@@ -28,8 +28,6 @@ def upgrade() -> None:
     
     # Drop tables that depend on reports
     op.execute('DROP TABLE IF EXISTS vector_indexes CASCADE')
-    op.execute('DROP TABLE IF EXISTS report_chats CASCADE')
-    op.execute('DROP TABLE IF EXISTS report_parameters CASCADE')
     
     # Drop reports (depends on users and conversations)
     op.execute('DROP TABLE IF EXISTS reports CASCADE')
@@ -111,37 +109,7 @@ def upgrade() -> None:
     op.create_foreign_key('reports_user_id_fkey', 'reports', 'users', ['user_id'], ['id'])
     op.create_foreign_key('reports_conversation_id_fkey', 'reports', 'conversations', ['conversation_id'], ['id'])
     
-    # 5. Create report_parameters (depends on reports)
-    op.create_table(
-        'report_parameters',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('report_id', sa.Integer(), nullable=False),
-        sa.Column('parameter_name', sa.String(length=255), nullable=False),
-        sa.Column('value', sa.String(length=100), nullable=True),
-        sa.Column('unit', sa.String(length=50), nullable=True),
-        sa.Column('normal_min', sa.String(length=100), nullable=True),
-        sa.Column('normal_max', sa.String(length=100), nullable=True),
-        sa.Column('status', sa.String(length=20), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_report_parameters_id'), 'report_parameters', ['id'], unique=False)
-    op.create_foreign_key('report_parameters_report_id_fkey', 'report_parameters', 'reports', ['report_id'], ['id'])
-    
-    # 6. Create report_chats (depends on reports)
-    op.create_table(
-        'report_chats',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('report_id', sa.Integer(), nullable=False),
-        sa.Column('question', sa.Text(), nullable=False),
-        sa.Column('answer', sa.Text(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_report_chats_id'), 'report_chats', ['id'], unique=False)
-    op.create_foreign_key('report_chats_report_id_fkey', 'report_chats', 'reports', ['report_id'], ['id'])
-    
-    # 7. Create vector_indexes (depends on reports)
+    # 5. Create vector_indexes (depends on reports)
     op.create_table(
         'vector_indexes',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -155,7 +123,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_vector_indexes_id'), 'vector_indexes', ['id'], unique=False)
     op.create_foreign_key('vector_indexes_report_id_fkey', 'vector_indexes', 'reports', ['report_id'], ['id'])
     
-    # 8. Create symptom_history (depends on users)
+    # 6. Create symptom_history (depends on users)
     op.create_table(
         'symptom_history',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -169,7 +137,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_symptom_history_id'), 'symptom_history', ['id'], unique=False)
     op.create_foreign_key('symptom_history_user_id_fkey', 'symptom_history', 'users', ['user_id'], ['id'])
     
-    # 9. Create medicine_reminders (depends on users)
+    # 7. Create medicine_reminders (depends on users)
     op.create_table(
         'medicine_reminders',
         sa.Column('id', sa.String(), nullable=False),
@@ -184,7 +152,7 @@ def upgrade() -> None:
     )
     op.create_foreign_key('medicine_reminders_user_id_fkey', 'medicine_reminders', 'users', ['user_id'], ['id'])
     
-    # 10. Create dose_logs (depends on users and medicine_reminders)
+    # 8. Create dose_logs (depends on users and medicine_reminders)
     op.create_table(
         'dose_logs',
         sa.Column('id', sa.String(), nullable=False),
@@ -209,8 +177,6 @@ def downgrade() -> None:
     op.execute('DROP TABLE IF EXISTS medicine_reminders CASCADE')
     op.execute('DROP TABLE IF EXISTS symptom_history CASCADE')
     op.execute('DROP TABLE IF EXISTS vector_indexes CASCADE')
-    op.execute('DROP TABLE IF EXISTS report_chats CASCADE')
-    op.execute('DROP TABLE IF EXISTS report_parameters CASCADE')
     op.execute('DROP TABLE IF EXISTS reports CASCADE')
     op.execute('DROP TABLE IF EXISTS messages CASCADE')
     op.execute('DROP TABLE IF EXISTS conversations CASCADE')

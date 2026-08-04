@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models.models import MedicationLog, Report, User
+from app.models.models import MedicationLog, Report, SymptomHistory, User
 from app.schemas.health import MedicationStatusUpdate
 from app.services.health_insights_service import calculate_dashboard, mark_overdue_medication_logs
 
@@ -22,6 +22,24 @@ def dashboard(db: Session = Depends(get_db), user: User = Depends(get_current_us
 def symptoms(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     data = calculate_dashboard(db, user.id)
     return {key: data[key] for key in ("symptom_frequency", "symptom_recurrence", "most_frequent_symptoms", "severity_trend")}
+
+
+@analytics_router.patch("/symptoms/{symptom_id}/resolve")
+def resolve_symptom(symptom_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Let a user explicitly mark one active symptom episode as recovered."""
+    symptom = db.query(SymptomHistory).filter(
+        SymptomHistory.id == symptom_id,
+        SymptomHistory.user_id == user.id,
+    ).first()
+    if not symptom:
+        raise HTTPException(status_code=404, detail="Symptom record not found")
+    if symptom.status != "Active":
+        raise HTTPException(status_code=409, detail="This symptom is already resolved")
+    symptom.status = "Resolved"
+    symptom.resolved_at = datetime.utcnow()
+    db.commit()
+    db.refresh(symptom)
+    return symptom
 
 @analytics_router.get("/adherence")
 def adherence(db: Session = Depends(get_db), user: User = Depends(get_current_user)):

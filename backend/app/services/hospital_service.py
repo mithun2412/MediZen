@@ -291,10 +291,11 @@ def get_nearby_hospitals(
     latitude: float,
     longitude: float,
     symptoms: str = "",
-    radius: int = 10000
+    radius: int = 10000,
+    specialty: str | None = None,
 ) -> List[Dict[str, Any]]:
     """Find nearby facilities and attach the symptom-appropriate care specialty."""
-    specialty = get_recommended_specialty(symptoms)
+    specialty = specialty or get_recommended_specialty(symptoms)
     hospitals = _find_nearby_facilities(latitude, longitude, symptoms, radius)
     specialty_search_link = create_specialty_maps_search_link(latitude, longitude, specialty)
 
@@ -306,25 +307,8 @@ def get_nearby_hospitals(
 
 
 def get_recommended_specialty(symptoms: str) -> str:
-    """Map symptom text to a care specialty; emergency symptoms still need urgent care."""
-    text = (symptoms or "").lower()
-    if any(term in text for term in ("chest pain", "palpitation", "heart", "blood pressure")):
-        return "Cardiology"
-    if any(term in text for term in ("headache", "migraine", "seizure", "dizziness", "numbness")):
-        return "Neurology"
-    if any(term in text for term in ("stomach", "abdomen", "abdominal", "acid reflux", "vomiting", "diarrhea")):
-        return "Gastroenterology"
-    if any(term in text for term in ("cough", "asthma", "breathing", "shortness of breath", "lung")):
-        return "Pulmonology"
-    if any(term in text for term in ("rash", "skin", "itching", "acne")):
-        return "Dermatology"
-    if any(term in text for term in ("joint", "bone", "back pain", "sprain", "fracture")):
-        return "Orthopedics"
-    if any(term in text for term in ("eye", "vision")):
-        return "Ophthalmology"
-    if any(term in text for term in ("ear", "nose", "throat", "sinus")):
-        return "ENT"
-    return "General Medicine"
+    """Legacy helper; specialty selection is performed by the LLM triage service."""
+    raise RuntimeError("Care specialty must be selected by the LLM triage service.")
 
 
 def create_specialty_maps_search_link(latitude: float, longitude: float, specialty: str) -> str:

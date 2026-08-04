@@ -28,6 +28,7 @@ from app.services.symptom_lifecycle_service import apply_resolution_message, rec
 from app.services.intent_router import route_intent
 from app.services.health_insights_service import calculate_dashboard, mark_overdue_medication_logs
 from app.rag.rag_service import rag_service
+from app.services.ai_decision_service import LLMDecisionUnavailable
 
 router = APIRouter()
 
@@ -259,6 +260,7 @@ def ai_chat(
         severity_result = analyze_severity(conversation_history)
         severity = severity_result.get("severity", "MODERATE")
         severity_reason = severity_result.get("reason", "Unable to analyze severity")
+        recommended_specialty = severity_result.get("specialty", "General Medicine")
 
         # Store the structured result from the completed AI health chat. Analytics
         # read this persisted history; they never infer symptoms from chat text.
@@ -274,7 +276,6 @@ def ai_chat(
         print("Finding Nearby Hospitals...")
         hospitals = []
         symptom_summary = extract_symptoms_data(conversation_history).get("primary_symptom", "")
-        recommended_specialty = get_recommended_specialty(symptom_summary)
         google_maps_link = (
             "https://www.google.com/maps/search/"
             f"{recommended_specialty.replace(' ', '+')}+hospital"
@@ -284,7 +285,8 @@ def ai_chat(
             hospitals = get_nearby_hospitals(
                 latitude=request.latitude,
                 longitude=request.longitude,
-                symptoms=symptom_summary
+                symptoms=symptom_summary,
+                specialty=recommended_specialty,
             )
             google_maps_link = create_specialty_maps_search_link(
                 request.latitude,
@@ -353,6 +355,8 @@ def ai_chat(
             "intent_router": intent_result,
         }
 
+    except LLMDecisionUnavailable as e:
+        raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         print("Conversation Route Error:", e)
         raise HTTPException(

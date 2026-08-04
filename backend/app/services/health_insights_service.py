@@ -5,7 +5,7 @@ import json
 
 from sqlalchemy.orm import Session
 
-from app.models.models import HealthAnalytics, MedicationLog, Report, ReportParameter, SymptomHistory, SymptomTrend
+from app.models.models import HealthAnalytics, MedicationLog, Report, SymptomHistory, SymptomTrend
 
 SEVERITY = {"low": 1, "mild": 1, "moderate": 2, "medium": 2, "high": 3, "severe": 3}
 
@@ -43,8 +43,7 @@ def _report_history(db, user_id):
     reports = db.query(Report).filter(Report.user_id == user_id).order_by(Report.created_at.desc()).all()
     result = []
     for report in reports[:10]:
-        parameters = db.query(ReportParameter).filter(ReportParameter.report_id == report.id).all()
-        result.append({"id": report.id, "report_date": report.created_at.isoformat(), "report_type": report.title or "Medical report", "summary": report.content or "", "detected_severity": _extract_severity(report.content), "parameters": [{"name": p.parameter_name, "value": p.parameter_value, "unit": p.unit, "reference_range": p.reference_range, "is_abnormal": p.is_abnormal} for p in parameters]})
+        result.append({"id": report.id, "report_date": report.created_at.isoformat(), "report_type": report.title or "Medical report", "summary": report.content or "", "detected_severity": _extract_severity(report.content)})
     return result
 
 
@@ -66,10 +65,9 @@ def calculated_analytics(db: Session, user_id: int):
     severity_trend = _trend(active_severities); recovery_trend = {"Improving": "Improving", "Worsening": "Declining", "Stable": "Stable"}[severity_trend]
     current, longest = _streaks(logs)
     reports = _report_history(db, user_id)
-    abnormal = sum(any(p["is_abnormal"] for p in report["parameters"]) for report in reports)
     symptom_component = 100 - ((sum(active_severities) / len(active_severities) - 1) / 2 * 100) if active_severities else 100
     recovery_component = {"Improving": 100, "Stable": 70, "Worsening": 30}[severity_trend]
-    report_component = max(0, 100 - abnormal * 20) if reports else 100
+    report_component = 100
     health_score = round(max(0, min(100, adherence * .40 + symptom_component * .30 + recovery_component * .20 + report_component * .10)))
     risk = "High" if (active_severities and active_severities[-1] >= 3) or missed >= 5 or severity_trend == "Worsening" else "Medium" if missed >= 2 or (active_severities and active_severities[-1] >= 2) else "Low"
     history = [{"id": s.id, "symptom": getattr(s, "symptom", getattr(s, "symptom_name", "Unspecified")), "status": getattr(s, "status", "Active"), "started_at": (getattr(s, "started_at", None) or getattr(s, "created_at", None)).isoformat(), "resolved_at": s.resolved_at.isoformat() if getattr(s, "resolved_at", None) else None, "recovery_days": (s.resolved_at - (s.started_at or s.created_at)).days if getattr(s, "resolved_at", None) else None} for s in symptoms]

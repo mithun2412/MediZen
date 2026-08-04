@@ -2,6 +2,7 @@ import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from app.llm.groq_client import client
+from app.services.ai_decision_service import LLMDecisionUnavailable, extract_symptom_summary
 
 def generate_ai_report(
     conversation_history: List[Dict[str, Any]],
@@ -31,85 +32,11 @@ def generate_ai_report(
         return generate_fallback_report(conversation_history, severity)
 
 def extract_symptoms_data(conversation_history: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Extract structured symptom data from conversation history."""
-    symptoms_data = {
-        "primary_symptom": "Not specified",
-        "duration": "Not specified",
-        "severity": "Not specified",
-        "severity_rating": None,
-        "associated_symptoms": [],
-        "medical_history": "None reported",
-        "pain_type": "Not specified",
-        "location": "Not specified",
-        "pattern": "Not specified"
-    }
-    
-    user_messages = [msg for msg in conversation_history if msg.get("role") == "user"]
-    
-    for i, msg in enumerate(user_messages):
-        content = msg.get("content", "").lower()
-        original = msg.get("content", "")
-        
-        # Primary symptom (first user message)
-        if i == 0 and "symptom" not in symptoms_data["primary_symptom"]:
-            if "have" in content or "feeling" in content or "experiencing" in content:
-                parts = original.split("have", 1) if "have" in content else original.split("feeling", 1) if "feeling" in content else [original]
-                if len(parts) > 1:
-                    symptoms_data["primary_symptom"] = parts[1].strip()[:100]
-            else:
-                symptoms_data["primary_symptom"] = original[:100]
-        
-        # Duration
-        duration_keywords = ["day", "week", "month", "year", "hour", "for", "since"]
-        if any(keyword in content for keyword in duration_keywords):
-            for sentence in original.split('.'):
-                if any(keyword in sentence.lower() for keyword in duration_keywords):
-                    symptoms_data["duration"] = sentence.strip()
-                    break
-        
-        # Severity rating
-        import re
-        severity_match = re.search(r'\b([1-9]|10)\b', content)
-        if severity_match:
-            symptoms_data["severity_rating"] = int(severity_match.group(1))
-        
-        # Associated symptoms
-        if "also" in content or "additional" in content or "plus" in content:
-            for sentence in original.split('.'):
-                if any(keyword in sentence.lower() for keyword in ["also", "additional", "plus"]):
-                    if len(sentence.strip()) > 10:
-                        symptoms_data["associated_symptoms"].append(sentence.strip())
-        
-        # Medical history
-        history_keywords = ["history", "medical", "condition", "diagnosed", "diabetes", "heart", "blood pressure", "asthma"]
-        if any(keyword in content for keyword in history_keywords):
-            for sentence in original.split('.'):
-                if any(keyword in sentence.lower() for keyword in history_keywords):
-                    symptoms_data["medical_history"] = sentence.strip()
-                    break
-        
-        # Pain type
-        pain_keywords = ["sharp", "dull", "burning", "aching", "stabbing", "throbbing"]
-        for keyword in pain_keywords:
-            if keyword in content:
-                symptoms_data["pain_type"] = keyword.capitalize()
-                break
-        
-        # Location
-        location_keywords = ["chest", "head", "back", "stomach", "abdomen", "leg", "arm", "neck", "shoulder"]
-        for keyword in location_keywords:
-            if keyword in content:
-                symptoms_data["location"] = keyword.capitalize()
-                break
-        
-        # Pattern
-        pattern_keywords = ["comes and goes", "constant", "intermittent", "worse when", "better when"]
-        for keyword in pattern_keywords:
-            if keyword in content:
-                symptoms_data["pattern"] = keyword.capitalize()
-                break
-    
-    return symptoms_data
+    """Extract report fields with the LLM; no message-position heuristics are used."""
+    result = extract_symptom_summary(conversation_history)
+    if result:
+        return result
+    raise LLMDecisionUnavailable("The AI symptom-extraction service is unavailable. Please try again shortly.")
 
 def generate_complete_report(
     symptoms: Dict[str, Any],

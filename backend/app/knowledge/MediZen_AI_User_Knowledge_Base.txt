@@ -1,0 +1,101 @@
+# MediZen AI User Knowledge Base
+
+This document powers the MediZen AI chatbot. It explains the application from a user's perspective and is organized for Retrieval-Augmented Generation (RAG).
+
+## What is MediZen AI?
+
+MediZen AI is a personal AI-powered health assistant that helps users manage symptoms, understand medical reports, track medications, and monitor health progress over time. It provides educational insights based on information recorded within the application. It does not diagnose diseases or replace healthcare professionals.
+
+## What services does MediZen AI provide?
+
+The application provides AI Health Chat, Medical Report Analysis, Medication Reminder, Medication Tracker, Health Analytics, Report History, AI Health Insights, and Symptom History.
+
+## AI Health Chat
+
+Users describe their symptoms in natural language. The AI asks one follow-up question at a time until enough information is collected. After sufficient information is available, a health assessment is generated. Users can continue asking questions about the generated assessment.
+
+## Medical Report Analysis
+
+Users can upload medical reports. The application summarizes the report, explains medical terminology in simple language, highlights important findings, and stores the report for future reference.
+
+## Medication Reminder
+
+Users can schedule medicines and reminder times. Each reminder is tracked as Pending, Taken, or Missed.
+
+## Medication Tracker
+
+Shows today's medicines, previous medication history, adherence percentage, missed doses, pending doses, current streak, and longest streak.
+
+## Health Analytics
+
+Health Analytics combines symptom history, medication history, and report history to generate health trends and personalized insights.
+
+## How is my Health Score calculated?
+
+The Health Score is calculated using medication adherence, current active symptoms, recovery progress, and medical report findings. Only active symptoms affect the current score. Resolved symptoms remain in history but do not reduce the score.
+
+## Why did my Health Score decrease?
+
+The score may decrease because of missed medications, worsening symptoms, severe active symptoms, slower recovery, or abnormal findings in medical reports.
+
+## Why did my Health Score improve?
+
+The score may improve when medications are taken consistently, symptoms resolve, recovery progresses, and reports indicate healthier trends.
+
+## What are AI Insights?
+
+AI Insights summarize your recorded health information in simple language. They explain trends, recovery progress, recurring symptoms, medication adherence, and general recommendations. They are informational only.
+
+## What happens when I recover from a symptom?
+
+Recovered symptoms are marked as resolved. They disappear from Current Health but remain in your medical history so you can review previous illnesses and recurrence.
+
+## What are recurring symptoms?
+
+If a symptom returns after it has been resolved, it is treated as a new occurrence. This helps identify recurring health patterns.
+
+## Report History
+
+Every uploaded report and every AI-generated health assessment is stored so you can review your health journey over time.
+
+## Dashboard
+
+The dashboard provides an overview of your Health Score, medication adherence, active symptoms, AI insights, recent reports, medication status, recovery trends, and risk level.
+
+## Can MediZen AI diagnose diseases?
+
+No. MediZen AI provides educational summaries and health monitoring features. It is not a substitute for a qualified healthcare professional.
+
+## Is my information used for analytics?
+
+Your recorded symptoms, medication history, and uploaded reports are used to generate personalized analytics and insights within your account.
+
+## Typical User Journey
+
+Start an AI Health Chat, answer follow-up questions, receive a health assessment, upload reports if available, schedule medication reminders, track medicine intake, and review Health Analytics to monitor long-term progress.
+
+## Frequently Asked Questions
+
+### What is this app?
+
+MediZen AI is an AI-powered health companion.
+
+### What can this app do?
+
+It helps manage symptoms, analyze reports, track medications, and monitor health.
+
+### Can I ask questions about my reports?
+
+Yes. After analysis, you can continue asking questions about the uploaded report.
+
+### Why are some symptoms missing from Current Health?
+
+Resolved symptoms move to your history and no longer affect your current health.
+
+### What affects my Health Score?
+
+Medication adherence, active symptoms, recovery progress, and report findings.
+
+### Can I delete reports?
+
+Yes. Deleted reports are removed from your history and future analytics.

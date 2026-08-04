@@ -149,26 +149,3 @@ class SymptomTrend(Base):
     recorded_date = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
 
     user = relationship("User", back_populates="symptom_trends")
-
-class ReportParameter(Base):
-    __tablename__ = "report_parameters"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    report_id = Column(String, ForeignKey("reports.id"), nullable=False)
-    parameter_name = Column(String, nullable=False)
-    parameter_value = Column(String, nullable=True)
-    unit = Column(String, nullable=True)
-    reference_range = Column(String, nullable=True)
-    is_abnormal = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Added
-
-class ReportChat(Base):
-    __tablename__ = "report_chats"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    report_id = Column(String, ForeignKey("reports.id"), nullable=False)
-    question = Column(Text, nullable=False)
-    answer = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Added

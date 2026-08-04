@@ -87,9 +87,9 @@ def init_db():
         Conversation,
         Message,
         Report,
-        ReportParameter,
-        ReportChat
-        , MedicationLog, HealthAnalytics, SymptomTrend
+        MedicationLog,
+        HealthAnalytics,
+        SymptomTrend,
     )
 
     # Create tables
