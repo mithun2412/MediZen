@@ -12,10 +12,7 @@ settings = get_settings()
 # ─────────────────────────────────────────────
 # Database URL
 # ─────────────────────────────────────────────
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://user:password@localhost:5432/medivoice"
-)
+DATABASE_URL = settings.DATABASE_URL
 
 # SQLite special config
 connect_args = (
