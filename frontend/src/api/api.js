@@ -299,6 +299,9 @@ export const getDashboardAnalytics = (userId) =>
 export const getHealthAnalyticsDashboard = () =>
   api.get("/api/analytics/dashboard");
 
+export const markSymptomResolved = (symptomId) =>
+  api.patch(`/api/analytics/symptoms/${symptomId}/resolve`);
+
 export const getMedicationStatistics = () =>
   api.get("/api/medications/statistics");
 

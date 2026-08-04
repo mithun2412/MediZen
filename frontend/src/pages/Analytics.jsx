@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Activity, BrainCircuit, HeartPulse, ShieldAlert, Pill, TrendingUp } from "lucide-react";
+import { Activity, BrainCircuit, CheckCircle2, HeartPulse, ShieldAlert, Pill, TrendingUp } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { getDoseLogs, getHealthAnalyticsDashboard, getHealthHistory } from "../api/api";
+import { getDoseLogs, getHealthAnalyticsDashboard, getHealthHistory, markSymptomResolved } from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import { buildHealthMetrics } from "../utils/healthMetrics";
 
@@ -14,6 +14,8 @@ export default function Analytics() {
   const [range, setRange] = useState("30D");
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState(() => buildHealthMetrics());
+  const [activeSymptoms, setActiveSymptoms] = useState([]);
+  const [resolvingId, setResolvingId] = useState(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -22,6 +24,7 @@ export default function Analytics() {
       const doses = logs.status === "fulfilled" ? logs.value.data || [] : [];
       const localMetrics = buildHealthMetrics(records, doses);
       const apiMetrics = dashboard.status === "fulfilled" ? dashboard.value.data : null;
+      setActiveSymptoms(apiMetrics?.current_symptoms || []);
       const apiInsights = apiMetrics?.ai_insights;
       const medication = apiMetrics?.medication_statistics || {};
       const insights = Array.isArray(apiInsights)
@@ -45,6 +48,19 @@ export default function Analytics() {
     });
   }, [user?.id]);
 
+  const handleMarkCured = async (symptom) => {
+    setResolvingId(symptom.id);
+    try {
+      await markSymptomResolved(symptom.id);
+      setActiveSymptoms((current) => current.filter((item) => item.id !== symptom.id));
+    } catch (error) {
+      console.error("Unable to mark symptom as cured:", error);
+      window.alert(error.response?.data?.detail || "Unable to mark this symptom as cured. Please try again.");
+    } finally {
+      setResolvingId(null);
+    }
+  };
+
   const visibleTrend = metrics.trend.slice(-({ "7D": 7, "30D": 30, "90D": 90 }[range]));
   const riskColor = { Low: "text-emerald-300", Medium: "text-amber-300", High: "text-rose-300" }[metrics.risk];
   return <main className="medivoice-light-theme min-h-screen bg-[#F6F8F7] px-5 py-8 text-[#12231F] sm:px-8">
@@ -59,6 +75,10 @@ export default function Analytics() {
           <ScoreCard icon={Pill} title="Medication adherence" value={`${metrics.adherence}%`} note={`${metrics.taken} taken · ${metrics.pending} pending`} />
           <ScoreCard icon={TrendingUp} title="Most common symptom" value={metrics.symptoms[0]?.name || "No data"} note={metrics.symptoms[0] ? `${metrics.symptoms[0].count} recorded entries` : "Start a health chat"} />
           <ScoreCard icon={ShieldAlert} title="Risk assessment" value={metrics.risk} note="Based on recorded symptom severity" risk={riskColor} />
+        </section>
+        <section className={card}>
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 className="font-bold">Current health</h2><p className="mt-1 text-sm text-slate-400">When a symptom is fully gone, mark it as cured here.</p></div></div>
+          {activeSymptoms.length ? <div className="mt-5 grid gap-3 md:grid-cols-2">{activeSymptoms.map((symptom) => <div key={symptom.id} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[.04] p-4"><div><p className="font-semibold">{symptom.symptom}</p><p className="mt-1 text-xs text-slate-400">{symptom.severity} severity</p></div><button onClick={() => handleMarkCured(symptom)} disabled={resolvingId === symptom.id} className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-emerald-400 px-3 py-2 text-sm font-bold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"><CheckCircle2 className="h-4 w-4" />{resolvingId === symptom.id ? "Saving…" : "I’m cured"}</button></div>)}</div> : <p className="mt-5 text-sm text-slate-400">No active symptoms to mark as cured.</p>}
         </section>
         <section className="grid gap-5 xl:grid-cols-2"><ChartCard title="Severity trend" subtitle="Reported symptom severity over time"><ResponsiveContainer width="100%" height={250}><AreaChart data={visibleTrend}><defs><linearGradient id="severity" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#22d3ee" stopOpacity=".55"/><stop offset="100%" stopColor="#22d3ee" stopOpacity="0"/></linearGradient></defs><CartesianGrid stroke="#ffffff12" vertical={false}/><XAxis dataKey="date" stroke="#94a3b8"/><YAxis domain={[0,3]} stroke="#94a3b8"/><Tooltip/><Area dataKey="severity" stroke="#22d3ee" fill="url(#severity)" /></AreaChart></ResponsiveContainer></ChartCard><ChartCard title="Symptom recurrence" subtitle="Most frequently reported symptoms"><ResponsiveContainer width="100%" height={250}><BarChart data={metrics.symptoms}><CartesianGrid stroke="#ffffff12" vertical={false}/><XAxis dataKey="name" stroke="#94a3b8"/><YAxis stroke="#94a3b8"/><Tooltip/><Bar dataKey="count" fill="#34d399" radius={[8,8,0,0]} /></BarChart></ResponsiveContainer></ChartCard></section>
         <section className="grid gap-5 xl:grid-cols-3"><div className={`${card} xl:col-span-2`}><div className="mb-5 flex items-center gap-3"><BrainCircuit className="text-cyan-300"/><div><h2 className="font-bold">AI healthcare insights</h2><p className="text-sm text-slate-400">Observations based on available history</p></div></div><div className="space-y-3">{metrics.insights.map((insight) => <div key={insight} className="rounded-2xl border border-cyan-400/10 bg-cyan-400/[.04] p-4 text-sm leading-6 text-slate-300">{insight}</div>)}</div></div><div className={card}><h2 className="font-bold">Suggested next step</h2><p className={`mt-5 text-3xl font-black ${riskColor}`}>{metrics.risk} risk</p><p className="mt-3 text-sm leading-6 text-slate-400">{metrics.risk === "High" ? "Arrange timely clinical advice, especially if symptoms are new, severe, or worsening." : "Keep logging symptoms and medication doses to make future insights more precise."}</p></div></section>
