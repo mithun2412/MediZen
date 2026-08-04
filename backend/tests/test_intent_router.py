@@ -9,11 +9,24 @@ def mock_llm_router(monkeypatch):
     def decide(message, **_context):
         text = message.lower()
         intent = (
-            "ANALYTICS" if "health score" in text or "trend" in text else
-            "KNOWLEDGE" if "app" in text or text.startswith("how does") else
-            "REPORT" if "report" in text else
-            "MEDICATION" if "dose" in text else
-            "GENERAL" if "thanks" in text else
+            "KNOWLEDGE"
+                if text.startswith("how is my health score")
+                or text.startswith("how does")
+                or "app" in text
+            else
+            "ANALYTICS"
+                if "trend" in text
+                or text.startswith("what is my health score")
+            else
+            "REPORT"
+                if "report" in text
+            else
+            "MEDICATION"
+                if "dose" in text
+            else
+            "GENERAL"
+                if "thanks" in text
+            else
             "SYMPTOM"
         )
         return {"intent": intent, "confidence": 0.9, "reason": "Mock LLM", "decision_source": "llm"}
